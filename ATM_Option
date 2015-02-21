@@ -1,0 +1,59 @@
+use nse;
+describe nse_fut;
+select close from nse.nse_eq where symbol='3MINDIA';
+/* sql query for ATM option at a particular expiry date */
+select opt_close,strike,type,timestamp,fut_close from
+(
+select o.close as opt_close,o.strike as strike,o.option_type as type,o.timestamp as timestamp,m.close as fut_close from
+(
+select close,strike,option_type,timestamp from nse.nse_opt where symbol='NIFTY' and expiry=str_to_date('20150226','%Y%m%d')
+) o,
+(
+select close,timestamp from nse.nse_fut where symbol='NIFTY' and expiry=str_to_date('20150226','%Y%m%d')
+)m
+where o.timestamp=m.timestamp 
+)d
+where
+strike between (fut_close-50) and (fut_close+50) order by timestamp,strike,type;
+/* sql query for ATM option for near month option and future as proxy*/
+select opt_close,strike,type,timestamp,fut_close from
+(
+    select o.close as opt_close,o.strike as strike,o.option_type as type,o.timestamp as timestamp,m.close as fut_close from
+        (
+            select close,strike,option_type,timestamp from nse.nse_opt where symbol='NIFTY' and datediff(expiry,timestamp)<30
+        ) o,
+        (
+            select close,timestamp from nse.nse_fut where symbol='NIFTY' and datediff(expiry,timestamp)<30
+        )m
+    where o.timestamp=m.timestamp 
+    )d
+where
+(strike > (fut_close) and strike < (fut_close+50) and type='CE')
+or
+(strike < (fut_close) and strike > (fut_close-50) and type='PE')
+ order by timestamp,strike,type;
+select * from
+(
+select opt_close,strike,type,timestamp,fut_close,expiry from
+(
+    select o.close as opt_close,o.strike as strike,o.option_type as type,o.timestamp as timestamp,m.close as fut_close,o.time_to_expiry as expiry from
+        (
+            select close,strike,option_type,timestamp,datediff(expiry,timestamp)/365 as time_to_expiry from nse.nse_opt where symbol='NIFTY' and datediff(expiry,timestamp)<30
+        ) o,
+        (
+            select close,timestamp from nse.nse_fut where symbol='NIFTY' and datediff(expiry,timestamp)<30
+        )m
+    where o.timestamp=m.timestamp 
+    ) d
+where
+(strike %100 =0) and
+(
+(strike > (fut_close) and strike < (fut_close+100) and type='CE') 
+or
+(strike < (fut_close) and strike > (fut_close-100) and type='PE') 
+)
+)g 
+where expiry=0
+order by timestamp,type,strike;
+
+select close,strike from nse.nse_opt where timestamp='2010-01-08' and option_type='CE';
