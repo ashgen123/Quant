@@ -8,15 +8,12 @@ import pandas as pd
 import pylab as plt
 import datetime as dt;
 import pdb
-import matplotlib.pyplot as plt;
-import sys
-
 dbuser=os.environ['dbuser']
 dbhost=os.environ['dbhost']
 dbpass=os.environ['dbpass']
 dbdatabase=os.environ['dbdatabase']
 
-def execute_sql_query(sql,sqlargs):
+def execute_sql_query(sql):
 	global dbuser,dbhost,dbpass,dbdatabase;
 	# Open database connection
 	db = MySQLdb.connect(dbhost,dbuser,dbpass,dbdatabase)
@@ -25,15 +22,14 @@ def execute_sql_query(sql,sqlargs):
 	cursor = db.cursor()
 
 	# execute SQL query using execute() method.
-	#db.set_trace()
-	cursor.execute(sql % sqlargs)
+	cursor.execute(sql)
 
 	# Fetch a single row using fetchone() method.
 	data = cursor.fetchall()
 
 	return data
 
-def atm_iv(symbol):
+def atm_iv():
 	sql="""select opt_close,strike,type,timestamp,fut_close,expiry from
 
 	(
@@ -42,13 +38,13 @@ def atm_iv(symbol):
 
 	 (
 
-	  select close,strike,option_type,timestamp,datediff(expiry,timestamp)/365 as time_to_expiry from nse.nse_opt where symbol='%s' and datediff(expiry,timestamp)<30
+	  select close,strike,option_type,timestamp,datediff(expiry,timestamp)/365 as time_to_expiry from nse.nse_opt where symbol='NIFTY' and datediff(expiry,timestamp)<30
 
 	 ) o,
 
 	 (
 
-	  select close,timestamp from nse.nse_fut where symbol='%s' and datediff(expiry,timestamp)<30
+	  select close,timestamp from nse.nse_fut where symbol='NIFTY' and datediff(expiry,timestamp)<30
 
 	 )m
 
@@ -58,7 +54,7 @@ def atm_iv(symbol):
 
 	where
 
-	(mod(strike, 100) = 0 ) and
+	(strike %100 =0) and
 
 	(
 
@@ -71,8 +67,8 @@ def atm_iv(symbol):
 	)
 
 	order by timestamp,type,strike"""
-	sqlargs=(symbol,symbol,)
-	data=execute_sql_query(sql,sqlargs)
+
+	data=execute_sql_query(sql)
 	calliv=[]
 	putiv=[]
 	calldates=[]
@@ -95,16 +91,11 @@ def atm_iv(symbol):
 			p= mibian.BS([underlying,strike,10,expiry*365], putPrice=price)
 			putiv.append(p.impliedVolatility)
 			putdates.append(timestamp)
-	#pdb.set_trace()
+	pdb.set_trace()
 	put=pd.Series(putiv,putdates)
 	call=pd.Series(calliv,calldates)
-	plt.figure()
-	call.plot()
-	put.plot()
-	fname='/home/sachan/Quant/Results/'+symbol+'_IV.png'
-	plt.savefig(fname)
-	plt.close()	
 	return call,put
 
 if __name__ == '__main__':
-	[call,put]=atm_iv(sys.argv[1])
+	[call,put]=atm_iv()
+	print call,put

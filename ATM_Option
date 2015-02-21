@@ -32,9 +32,8 @@ where
 or
 (strike < (fut_close) and strike > (fut_close-50) and type='PE')
  order by timestamp,strike,type;
-select * from
-(
-select opt_close,strike,type,timestamp,fut_close,expiry from
+
+select opt_close,strike,type,timestamp,fut_close,expiry*365 from
 (
     select o.close as opt_close,o.strike as strike,o.option_type as type,o.timestamp as timestamp,m.close as fut_close,o.time_to_expiry as expiry from
         (
@@ -52,8 +51,6 @@ where
 or
 (strike < (fut_close) and strike > (fut_close-100) and type='PE') 
 )
-)g 
-where expiry=0
 order by timestamp,type,strike;
 
 select close,strike from nse.nse_opt where timestamp='2010-01-08' and option_type='CE';
