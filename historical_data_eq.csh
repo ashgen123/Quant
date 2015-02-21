@@ -3,7 +3,7 @@
 date_start=$1
 date_end=$2
 arg=$#
-dir="/home/sachan/Quant/Data"
+dir="/home/sachan/Quant/Data/"
 
 if [ $arg != 2 ]; then
 echo "Usage:
@@ -31,8 +31,8 @@ year=`date -d$date +%Y`
 day=`date -d$date +%d`
 
 end_file=eq_${date_start}_${date_end}.csv
-wget -O  $dir${date}.zip -U firefox http://nseindia.com/content/historical/EQUITIES/${year}/${month}/cm${date_format}bhav.csv.zip >> /tmp/log.txt 2>&1
-	unzip $dir${date}.zip -d${dir}
+wget -q -O  $dir${date}.zip -U firefox http://nseindia.com/content/historical/EQUITIES/${year}/${month}/cm${date_format}bhav.csv.zip >> /tmp/log.txt 2>&1
+	unzip -o $dir${date}.zip -d${dir}
         echo $dir${date}.zip
 
         count=`ls -ltr ${dir}|grep csv|wc -l`

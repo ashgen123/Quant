@@ -32,11 +32,9 @@ day=`date -d$date +%d`
 
 fut_file=fut_${date_start}_${date_end}.csv
 opt_file=opt_${date_start}_${date_end}.csv
-cat /dev/null > ${dir}$fut_file
-cat /dev/null > ${dir}$opt_file
 
-wget -O  $dir${date}.zip -U firefox http://nseindia.com/content/historical/DERIVATIVES/${year}/${month}/fo${date_format}bhav.csv.zip >> /tmp/log.txt 2>&1
-	unzip $dir${date}.zip -d${dir}
+wget -q -O  $dir${date}.zip -U firefox http://nseindia.com/content/historical/DERIVATIVES/${year}/${month}/fo${date_format}bhav.csv.zip >> /tmp/log.txt 2>&1
+	unzip -o $dir${date}.zip -d${dir}
         echo $dir${date}.zip
 
         count=`ls -ltr ${dir}|grep csv|wc -l`
